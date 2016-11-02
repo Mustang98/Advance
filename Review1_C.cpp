@@ -1,42 +1,42 @@
-#include <iostream>
+п»ї#include <iostream>
 #include <fstream>
 #include <algorithm>
 
-int busNumber; // Количество автобусов
-int peopleNumber; // Количество людей в очереди
-int busCapacity; // Вместимость автобуса
+int busNumber; // РљРѕР»РёС‡РµСЃС‚РІРѕ Р°РІС‚РѕР±СѓСЃРѕРІ
+int peopleNumber; // РљРѕР»РёС‡РµСЃС‚РІРѕ Р»СЋРґРµР№ РІ РѕС‡РµСЂРµРґРё
+int busCapacity; // Р’РјРµСЃС‚РёРјРѕСЃС‚СЊ Р°РІС‚РѕР±СѓСЃР°
 
-int peopleVolume[301]; // Массив объемов людей в очереди
-int partialAnswer[102][301][301]; // Массив ответов для подзадач
-// Булевый массив. Отвечает за то, посчитан ли уже ответ для конкретной подзадачи
+int peopleVolume[301]; // РњР°СЃСЃРёРІ РѕР±СЉРµРјРѕРІ Р»СЋРґРµР№ РІ РѕС‡РµСЂРµРґРё
+int partialAnswer[102][301][301]; // РњР°СЃСЃРёРІ РѕС‚РІРµС‚РѕРІ РґР»СЏ РїРѕРґР·Р°РґР°С‡
+// Р‘СѓР»РµРІС‹Р№ РјР°СЃСЃРёРІ. РћС‚РІРµС‡Р°РµС‚ Р·Р° С‚Рѕ, РїРѕСЃС‡РёС‚Р°РЅ Р»Рё СѓР¶Рµ РѕС‚РІРµС‚ РґР»СЏ РєРѕРЅРєСЂРµС‚РЅРѕР№ РїРѕРґР·Р°РґР°С‡Рё
 bool isVisited[101][301][301] = {0};
 
 /*
-Функция находит ответ для подзадачи, характеризуемой следующими параметрами:
-currentBus - номер автобуса (начиная с 0), который стоит на остановке
-currentPassenger - номер пассажира (начиная с 0), стоящего в начале очереди
-busySpace - сколько объёма занято в текущем автобусе
+Р¤СѓРЅРєС†РёСЏ РЅР°С…РѕРґРёС‚ РѕС‚РІРµС‚ РґР»СЏ РїРѕРґР·Р°РґР°С‡Рё, С…Р°СЂР°РєС‚РµСЂРёР·СѓРµРјРѕР№ СЃР»РµРґСѓСЋС‰РёРјРё РїР°СЂР°РјРµС‚СЂР°РјРё:
+currentBus - РЅРѕРјРµСЂ Р°РІС‚РѕР±СѓСЃР° (РЅР°С‡РёРЅР°СЏ СЃ 0), РєРѕС‚РѕСЂС‹Р№ СЃС‚РѕРёС‚ РЅР° РѕСЃС‚Р°РЅРѕРІРєРµ
+currentPassenger - РЅРѕРјРµСЂ РїР°СЃСЃР°Р¶РёСЂР° (РЅР°С‡РёРЅР°СЏ СЃ 0), СЃС‚РѕСЏС‰РµРіРѕ РІ РЅР°С‡Р°Р»Рµ РѕС‡РµСЂРµРґРё
+busySpace - СЃРєРѕР»СЊРєРѕ РѕР±СЉС‘РјР° Р·Р°РЅСЏС‚Рѕ РІ С‚РµРєСѓС‰РµРј Р°РІС‚РѕР±СѓСЃРµ
 */
 int findMaximumProfit(int currentBus, int currentPassenger, int busySpace)
 {
-    // Если закончились автобусы или люди в очереди, ты мы никого уже не сможем увезти
+    // Р•СЃР»Рё Р·Р°РєРѕРЅС‡РёР»РёСЃСЊ Р°РІС‚РѕР±СѓСЃС‹ РёР»Рё Р»СЋРґРё РІ РѕС‡РµСЂРµРґРё, С‚С‹ РјС‹ РЅРёРєРѕРіРѕ СѓР¶Рµ РЅРµ СЃРјРѕР¶РµРј СѓРІРµР·С‚Рё
     if (currentBus == busNumber || currentPassenger == peopleNumber)
     {
         return 0;
     }
 
-    // Если для текущей подзадачи уже посчитан ответ, возвращаем его
+    // Р•СЃР»Рё РґР»СЏ С‚РµРєСѓС‰РµР№ РїРѕРґР·Р°РґР°С‡Рё СѓР¶Рµ РїРѕСЃС‡РёС‚Р°РЅ РѕС‚РІРµС‚, РІРѕР·РІСЂР°С‰Р°РµРј РµРіРѕ
     if (isVisited[currentBus][currentPassenger][busySpace])
     {
         return partialAnswer[currentBus][currentPassenger][busySpace];
     }
 
-    int maximumProfit; // Ответ для текущей подзадачи
+    int maximumProfit; // РћС‚РІРµС‚ РґР»СЏ С‚РµРєСѓС‰РµР№ РїРѕРґР·Р°РґР°С‡Рё
 
-    // Если текущий пассажир уходит из очереди
+    // Р•СЃР»Рё С‚РµРєСѓС‰РёР№ РїР°СЃСЃР°Р¶РёСЂ СѓС…РѕРґРёС‚ РёР· РѕС‡РµСЂРµРґРё
     maximumProfit = findMaximumProfit(currentBus, currentPassenger + 1, busySpace);
 
-    // Если в автобусе достаточно свободного места, текущий пассажир садится в него
+    // Р•СЃР»Рё РІ Р°РІС‚РѕР±СѓСЃРµ РґРѕСЃС‚Р°С‚РѕС‡РЅРѕ СЃРІРѕР±РѕРґРЅРѕРіРѕ РјРµСЃС‚Р°, С‚РµРєСѓС‰РёР№ РїР°СЃСЃР°Р¶РёСЂ СЃР°РґРёС‚СЃСЏ РІ РЅРµРіРѕ
     if (peopleVolume[currentPassenger] + busySpace <= busCapacity)
     {
         int newProfit = 1 + findMaximumProfit(currentBus,
@@ -45,7 +45,7 @@ int findMaximumProfit(int currentBus, int currentPassenger, int busySpace)
 
         maximumProfit = std::max(maximumProfit, newProfit);
     }
-    else // Иначе подъезжает следующий автобус
+    else // РРЅР°С‡Рµ РїРѕРґСЉРµР·Р¶Р°РµС‚ СЃР»РµРґСѓСЋС‰РёР№ Р°РІС‚РѕР±СѓСЃ
     {
         int newProfit = findMaximumProfit(currentBus + 1,
                                           currentPassenger,
@@ -53,7 +53,7 @@ int findMaximumProfit(int currentBus, int currentPassenger, int busySpace)
         maximumProfit = std::max(maximumProfit, newProfit);
     }
 
-    // Сохраняем ответ для текущей подзадачи
+    // РЎРѕС…СЂР°РЅСЏРµРј РѕС‚РІРµС‚ РґР»СЏ С‚РµРєСѓС‰РµР№ РїРѕРґР·Р°РґР°С‡Рё
     isVisited[currentBus][currentPassenger][busySpace] = true;
     partialAnswer[currentBus][currentPassenger][busySpace] = maximumProfit;
 
@@ -65,7 +65,7 @@ int main()
     std::ifstream cin("c.in");
     std::ofstream cout("c.out");
 
-    // считыаем входные данные
+    // СЃС‡РёС‚С‹Р°РµРј РІС…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ
     cin >> busNumber;
     cin >> busCapacity;
     cin >> peopleNumber;
@@ -75,7 +75,7 @@ int main()
         cin >> peopleVolume[i];
     }
 
-    // вызываем рекурсивную функцию поиска ответа и выводим результат
+    // РІС‹Р·С‹РІР°РµРј СЂРµРєСѓСЂСЃРёРІРЅСѓСЋ С„СѓРЅРєС†РёСЋ РїРѕРёСЃРєР° РѕС‚РІРµС‚Р° Рё РІС‹РІРѕРґРёРј СЂРµР·СѓР»СЊС‚Р°С‚
     cout << findMaximumProfit(0, 0, 0);
 
     return 0;
