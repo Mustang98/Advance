@@ -1,15 +1,7 @@
 ﻿#include <iostream>
 #include <fstream>
+#include <vector>
 #include <algorithm>
-
-int busNumber; // Количество автобусов
-int peopleNumber; // Количество людей в очереди
-int busCapacity; // Вместимость автобуса
-
-int peopleVolume[301]; // Массив объемов людей в очереди
-int partialAnswer[102][301][301]; // Массив ответов для подзадач
-// Булевый массив. Отвечает за то, посчитан ли уже ответ для конкретной подзадачи
-bool isVisited[101][301][301] = {0};
 
 /*
 Функция находит ответ для подзадачи, характеризуемой следующими параметрами:
@@ -17,7 +9,15 @@ currentBus - номер автобуса (начиная с 0), который �
 currentPassenger - номер пассажира (начиная с 0), стоящего в начале очереди
 busySpace - сколько объёма занято в текущем автобусе
 */
-int findMaximumProfit(int currentBus, int currentPassenger, int busySpace)
+int findMaximumProfit(int currentBus,
+                      int currentPassenger,
+                      int busySpace,
+                      int busNumber,
+                      int peopleNumber,
+                      int busCapacity,
+                      std::vector<int>& peopleVolume,
+                      std::vector<std::vector<std::vector<int> > >& partialAnswer,
+                      std::vector<std::vector<std::vector<bool> > >& isVisited)
 {
     // Если закончились автобусы или люди в очереди, ты мы никого уже не сможем увезти
     if (currentBus == busNumber || currentPassenger == peopleNumber)
@@ -34,14 +34,28 @@ int findMaximumProfit(int currentBus, int currentPassenger, int busySpace)
     int maximumProfit; // Ответ для текущей подзадачи
 
     // Если текущий пассажир уходит из очереди
-    maximumProfit = findMaximumProfit(currentBus, currentPassenger + 1, busySpace);
+    maximumProfit = findMaximumProfit(currentBus,
+                                      currentPassenger + 1,
+                                      busySpace,
+                                      busNumber,
+                                      peopleNumber,
+                                      busCapacity,
+                                      peopleVolume,
+                                      partialAnswer,
+                                      isVisited);
 
     // Если в автобусе достаточно свободного места, текущий пассажир садится в него
     if (peopleVolume[currentPassenger] + busySpace <= busCapacity)
     {
         int newProfit = 1 + findMaximumProfit(currentBus,
                                               currentPassenger + 1,
-                                              busySpace + peopleVolume[currentPassenger]);
+                                              busySpace + peopleVolume[currentPassenger],
+                                              busNumber,
+                                              peopleNumber,
+                                              busCapacity,
+                                              peopleVolume,
+                                              partialAnswer,
+                                              isVisited);
 
         maximumProfit = std::max(maximumProfit, newProfit);
     }
@@ -49,7 +63,13 @@ int findMaximumProfit(int currentBus, int currentPassenger, int busySpace)
     {
         int newProfit = findMaximumProfit(currentBus + 1,
                                           currentPassenger,
-                                          0);
+                                          0,
+                                          busNumber,
+                                          peopleNumber,
+                                          busCapacity,
+                                          peopleVolume,
+                                          partialAnswer,
+                                          isVisited);
         maximumProfit = std::max(maximumProfit, newProfit);
     }
 
@@ -60,23 +80,72 @@ int findMaximumProfit(int currentBus, int currentPassenger, int busySpace)
     return maximumProfit;
 }
 
-int main()
+void readInput(std::ifstream& inputStream,
+               int& busNumber,
+               int& peopleNumber,
+               int& busCapacity,
+               std::vector<int>& peopleVolume)
 {
-    std::ifstream cin("c.in");
-    std::ofstream cout("c.out");
+    inputStream >> busNumber;
+    inputStream >> busCapacity;
+    inputStream >> peopleNumber;
 
-    // считыаем входные данные
-    cin >> busNumber;
-    cin >> busCapacity;
-    cin >> peopleNumber;
-
+    int volume;
     for (int i = 0; i < peopleNumber; ++i)
     {
-        cin >> peopleVolume[i];
+        inputStream >> volume;
+        peopleVolume.push_back(volume);
     }
+}
 
-    // вызываем рекурсивную функцию поиска ответа и выводим результат
-    cout << findMaximumProfit(0, 0, 0);
+void writeOutput(std::ofstream& outputStream, int maximumProfit)
+{
+    outputStream << maximumProfit;
+}
 
+int main()
+{
+    std::ios_base::sync_with_stdio(false);
+    std::ifstream fin("c.in");
+    std::ofstream fout("c.out");
+
+    int busNumber; // Количество автобусов
+    int peopleNumber; // Количество людей в очереди
+    int busCapacity; // Вместимость автобуса
+    std::vector<int> peopleVolume; // Массив объемов людей в очереди
+
+    // Считываем входные данные
+    readInput(fin,
+              busNumber,
+              peopleNumber,
+              busCapacity,
+              peopleVolume);
+
+    // Массив ответов для подзадач
+    std::vector<std::vector<std::vector<int> > > partialAnswer
+    (busNumber,
+     std::vector<std::vector<int>  > (peopleNumber,
+                                      std::vector<int> (busCapacity + 1, 0)));
+    // Булевый массив. Отвечает за то, посчитан ли уже ответ для конкретной подзадачи
+    std::vector<std::vector<std::vector<bool> > > isVisited
+    (busNumber,
+     std::vector<std::vector<bool>  > (peopleNumber,
+                                       std::vector<bool> (busCapacity + 1, 0)));
+
+    // Вызываем рекурсивную функцию поиска ответа и выводим результат
+    int maximumProfit = findMaximumProfit(0,
+                                          0,
+                                          0,
+                                          busNumber,
+                                          peopleNumber,
+                                          busCapacity,
+                                          peopleVolume,
+                                          partialAnswer,
+                                          isVisited);
+
+    writeOutput(fout, maximumProfit);
+
+    fin.close();
+    fout.close();
     return 0;
 }
