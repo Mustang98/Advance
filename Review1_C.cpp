@@ -9,16 +9,16 @@ currentBus - номер автобуса (начиная с 0), который �
 currentPassenger - номер пассажира (начиная с 0), стоящего в начале очереди
 busySpace - сколько объёма занято в текущем автобусе
 */
-int findMaximumProfit(int currentBus,
-                      int currentPassenger,
-                      int busySpace,
-                      int busNumber,
-                      int peopleNumber,
-                      int busCapacity,
-                      std::vector<int>& peopleVolume,
+int findMaximumProfit(int const currentBus,
+                      int const currentPassenger,
+                      int const busySpace,
+                      std::vector<int> const &peopleVolume,
                       std::vector<std::vector<std::vector<int> > >& partialAnswer,
                       std::vector<std::vector<std::vector<bool> > >& isVisited)
 {
+    int busNumber = partialAnswer.size();
+    int peopleNumber = partialAnswer[0].size();
+    int busCapacity = partialAnswer[0][0].size() - 1;
     // Если закончились автобусы или люди в очереди, ты мы никого уже не сможем увезти
     if (currentBus == busNumber || currentPassenger == peopleNumber)
     {
@@ -37,9 +37,6 @@ int findMaximumProfit(int currentBus,
     maximumProfit = findMaximumProfit(currentBus,
                                       currentPassenger + 1,
                                       busySpace,
-                                      busNumber,
-                                      peopleNumber,
-                                      busCapacity,
                                       peopleVolume,
                                       partialAnswer,
                                       isVisited);
@@ -50,9 +47,6 @@ int findMaximumProfit(int currentBus,
         int newProfit = 1 + findMaximumProfit(currentBus,
                                               currentPassenger + 1,
                                               busySpace + peopleVolume[currentPassenger],
-                                              busNumber,
-                                              peopleNumber,
-                                              busCapacity,
                                               peopleVolume,
                                               partialAnswer,
                                               isVisited);
@@ -64,9 +58,6 @@ int findMaximumProfit(int currentBus,
         int newProfit = findMaximumProfit(currentBus + 1,
                                           currentPassenger,
                                           0,
-                                          busNumber,
-                                          peopleNumber,
-                                          busCapacity,
                                           peopleVolume,
                                           partialAnswer,
                                           isVisited);
@@ -80,7 +71,7 @@ int findMaximumProfit(int currentBus,
     return maximumProfit;
 }
 
-void readInput(std::ifstream& inputStream,
+void readBusData(std::ifstream &inputStream,
                int& busNumber,
                int& peopleNumber,
                int& busCapacity,
@@ -98,7 +89,7 @@ void readInput(std::ifstream& inputStream,
     }
 }
 
-void writeOutput(std::ofstream& outputStream, int maximumProfit)
+void writeMaximumProfit(std::ofstream& outputStream, int const maximumProfit)
 {
     outputStream << maximumProfit;
 }
@@ -115,7 +106,7 @@ int main()
     std::vector<int> peopleVolume; // Массив объемов людей в очереди
 
     // Считываем входные данные
-    readInput(fin,
+    readBusData(fin,
               busNumber,
               peopleNumber,
               busCapacity,
@@ -136,14 +127,11 @@ int main()
     int maximumProfit = findMaximumProfit(0,
                                           0,
                                           0,
-                                          busNumber,
-                                          peopleNumber,
-                                          busCapacity,
                                           peopleVolume,
                                           partialAnswer,
                                           isVisited);
 
-    writeOutput(fout, maximumProfit);
+    writeMaximumProfit(fout, maximumProfit);
 
     fin.close();
     fout.close();
